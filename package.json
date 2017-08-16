@@ -1,0 +1,24 @@
+{
+  "name": "scrapper",
+  "version": "1.0.0",
+  "description": "A simple scrapper to mine information from public financial report websites.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Node.js",
+    "Web",
+    "Scrapping",
+    "Cheerio",
+    "JS",
+    "npm"
+  ],
+  "author": "Igor Franca",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "nodemon": "^1.11.0",
+    "request-promise": "^4.2.1"
+  }
+}
