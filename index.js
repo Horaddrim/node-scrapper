@@ -4,10 +4,15 @@ const rp = require('request-promise');
 const URL = "https://www.portaldatransparencia.gov.br/servidores/Funcao-ListaServidores.asp?CodFuncao=CSU&CodNivel=0001";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+//Dados a serem coletados, desculpem pela semantica, porém foi me dando ideias assim :D!
 supervisor = [];
 pessoas = [];
+cpf = [];
 dados = {};
 Exports = [];
+
+valores = [];
+valoresCPF = [];
 
 const options = {
     uri: URL,
@@ -36,10 +41,15 @@ rp(options)
                                     {
                                         html(elem).each((i, elem) => 
                                         {
+                                            cpfs = cheerio.load(html(elem).html());
+                                            cpf.push(cpfs('body').html().substring(0,14));
+
                                             html(elem).children().each((i,elem) => 
                                             {
                                                 elemento = html(elem).children().text();
                                                 primeira = elemento.charAt(1);
+
+                                                //'td[class=firstChild]'
                                                 
                                                 if(elemento != "" && primeira.toUpperCase() === primeira && /^[a-zA-Z ]+$/.test(elemento))
                                                 {
@@ -62,14 +72,15 @@ rp(options)
                 {
                     if(element.startsWith("Funcao"))
                     {
-                        arrayLimpo.push(element);
+                        arrayLimpo.push("https://www.portaldatransparencia.gov.br/servidores/Servidor-DetalhaRemuneracao" + element.substring(22) + "&bInformacaoFinanceira=True");
                     }
                 }, this);
 
                 dados = 
                 {
                     NomeServidores: pessoas,
-                    IdServidores: arrayLimpo
+                    IdServidores: arrayLimpo,
+                    cpfServidores: cpf
                 };
                 //console.log(dados);
 
@@ -81,12 +92,41 @@ rp(options)
                         dados = 
                         {   
                             Nome: pessoas.pop(),
-                            IdUrl: arrayLimpo.pop()
+                            IdUrl: arrayLimpo.pop(),
+                            CPF: cpf.pop()
                         };
                         Exports.push(dados);
                         i--;
                     }
-                    console.log(Exports);
+                    //console.log(Exports);
+                    Exports.forEach((element) => 
+                    {
+                        let options = {
+                            uri: element.IdUrl,
+                            transform: (body) => 
+                            {
+                                return cheerio.load(body);
+                            }
+                        };
+
+                        rp(options)
+                            .then(($) => 
+                            {
+                                setTimeout(() => 
+                                {
+                                    id = Exports.indexOf(element);
+                                    //console.log(id);
+                                    element.Valor = $('tr[class=remuneracaolinhatotalliquida]').children('td[class=colunaValor]').html();
+                                    Exports[id] = element;
+                                    //Exports.push(element);
+                                    console.log(element);
+                                },2000);
+                            })
+                            .catch((err) => 
+                            {
+                                console.log(err);
+                            });
+                    });
                 }
             });
         });
